@@ -8,13 +8,16 @@ except ImportError:
 
 class LocalBinary:
   def __init__(self):
+    print(self.__is_alpine())
     is_64bits = sys.maxsize > 2**32
     self.is_windows = False
     osname = platform.system()
     if osname == 'Darwin':
       self.http_path = "https://s3.amazonaws.com/browserStack/browserstack-local/BrowserStackLocal-darwin-x64"
     elif osname == 'Linux':
-      if is_64bits:
+      if self.__is_alpine():
+        self.http_path = "https://bstack-local-prod.s3.amazonaws.com/BrowserStackLocal-alpine"
+      elif is_64bits:
         self.http_path = "https://s3.amazonaws.com/browserStack/browserstack-local/BrowserStackLocal-linux-x64"
       else:
         self.http_path = "https://s3.amazonaws.com/browserStack/browserstack-local/BrowserStackLocal-linux-ia32"
@@ -28,6 +31,16 @@ class LocalBinary:
       tempfile.gettempdir()
     ]
     self.path_index = 0
+
+  def __is_alpine(self):
+    try:
+      osname = subprocess.check_output('grep -w "NAME" /etc/os-release', shell=True).decode("utf-8")
+      if "Alpine" in osname:
+        return True
+      else:
+        return False
+    except:
+      return False
 
   def __make_path(self, dest_path):
     try:
